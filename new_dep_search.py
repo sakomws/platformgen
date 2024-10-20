@@ -9,7 +9,7 @@ def read_dependencies(file_path="project_dep"):
 
 def search_brave(query):
     """Search for the newest version of a dependency using Brave Search API."""
-    api_key = "BSAzIGCgsQtBP8fMNb17K33yOW8xob4"  # Replace with your actual Brave Search API key
+    api_key = "Enter key"  # Replace with your actual Brave Search API key
     url = "https://api.search.brave.com/res/v1/web/search"
     headers = {"X-Subscription-Token": api_key}
     params = {"q": f"{query} all versions pypi"}
