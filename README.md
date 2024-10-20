@@ -13,4 +13,5 @@
 **Next**
 - Take action (create the PR) when the user approves and creates the PR _(via the UI)_
 - Improve UI (V0)
-- Make pipeline more robust (support/test many repos) 
+- Make pipeline more robust (support/test many repos)
+- Integrate Lambda/Nebius for inference - https://docs.nebius.ai/studio/inference/
