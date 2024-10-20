@@ -1,0 +1,8 @@
+requests 
+packaging
+fastapi
+uvicorn 
+PyGithub
+python-dotenv
+pydantic
+
