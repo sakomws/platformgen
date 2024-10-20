@@ -22,6 +22,9 @@
 # Solution
 - Progressive automation maturity from manual assistance to full automation​.-
 
+# Team
+[Sako M](https://www.linkedin.com/in/sakom)
+[Julian Saks](https://www.linkedin.com/in/juliansaks)
   
 # Reference
 https://github.com/renovatebot/renovate
