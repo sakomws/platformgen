@@ -5,3 +5,5 @@ uvicorn
 PyGithub
 python-dotenv
 pydantic
+openai
+groq

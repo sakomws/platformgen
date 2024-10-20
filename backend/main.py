@@ -10,6 +10,8 @@ from typing import Optional
 import random
 import string
 from fastapi.middleware.cors import CORSMiddleware
+import openai
+from groq import Groq
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +21,9 @@ auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
 # Initialize GitHub client using token from environment variable
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 github_client = Github(GITHUB_TOKEN)
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 # Create FastAPI app
 app = FastAPI()
@@ -36,6 +41,7 @@ app.add_middleware(
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 # Define the Pydantic model for the request body
 class RepoInfo(BaseModel):
@@ -69,6 +75,10 @@ class PullRequestInfo(BaseModel):
     owner: str
     repo_name: str
     branch_name: str
+
+class DiffRequest(BaseModel):
+    original_requirements: str
+    updated_requirements: str
 
 @app.get("/repos")
 async def list_repos():
@@ -274,7 +284,6 @@ def run_all_actions(repo_info: RepoInfo):
         # 4. Generate Updated requirements.txt
         updated_content = generate_updated_requirements(dependencies, updates)
 
-
         # 5. Create or Checkout a Random Branch
         repo = github_client.get_repo(f"{repo_info.owner}/{repo_info.repo_name}")
         branch_name = generate_random_branch_name()
@@ -305,14 +314,96 @@ def run_all_actions(repo_info: RepoInfo):
             base="main"
         )
 
+        # 7. Generate Diff Summary using OpenAI
+        diff_summary = get_diff_summary(
+            DiffRequest(
+                original_requirements=requirements_text,
+                updated_requirements=updated_content
+            )
+        ).get("summary", "No summary available.")
+
+        # Return the result
         return {
             "repositories": repos,
             "parsed_dependencies": dependencies,
             "updates": updates,
             "updated_requirements": updated_content,
+            "diff_summary": diff_summary,
             "pr_link": pr.html_url
         }
 
     except Exception as e:
         logger.error(f"Error processing request: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/diff_summary")
+def get_diff_summary(diff_request: DiffRequest):
+    try:
+        # Prepare prompt
+        prompt = f"""
+        Compare the following two sets of requirements and provide a summary of the differences:
+        
+        Original Requirements:
+        {diff_request.original_requirements}
+        
+        Updated Requirements:
+        {diff_request.updated_requirements}
+        
+        Summary:
+        """
+
+        # 1. Call OpenAI ChatCompletion
+        openai_summary = ""
+        try:
+            openai_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are an assistant that compares software package requirements. Return a summary of the differences between the original and updated requirements."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=200,
+                n=1,
+                stop=None,
+                temperature=0.7,
+            )
+            openai_summary = openai_response.choices[0].message["content"].strip()
+        except Exception as e:
+            logger.error(f"Failed to generate summary with OpenAI: {e}")
+            openai_summary = "Failed to generate summary with OpenAI."
+
+        # 2. Call Groq Llama 3.2 Model
+        groq_summary = ""
+        try:
+            client = Groq()  # Assuming Groq client is already set up
+            completion = client.chat.completions.create(
+                model="llama-3.2-3b-preview",
+                messages=[
+                    {"role": "system", "content": "You are an assistant that compares software package requirements. Return a summary of the differences between the original and updated requirements."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=1,
+                max_tokens=1024,
+                top_p=1,
+                stream=False,
+                stop=None,
+            )
+            # Safely attempt to extract content from Groq response
+            if completion.choices and len(completion.choices) > 0:
+                groq_summary = getattr(completion.choices[0].message, "content", "").strip()
+            else:
+                groq_summary = "No response from Groq."
+        except Exception as e:
+            logger.error(f"Failed to generate summary with Groq: {e}")
+            groq_summary = "Failed to generate summary with Groq."
+
+        # Combine OpenAI and Groq summaries
+        combined_summary = f"### OpenAI Summary:\n{openai_summary}\n\n### Llama 3.2 Summary:\n{groq_summary}"
+        
+        return {"summary": combined_summary}
+
+    except Exception as e:
+        logger.error(f"Failed to generate diff summary: {e}")
+        return {"summary": "Failed to generate summary due to an error."}
+
+
+

@@ -33,7 +33,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white text-black">
       <main className="flex flex-col gap-6 items-center">
-        <h1 className="text-2xl font-bold">Platformgen - GitHub Repo Manager</h1>
+        <h1 className="text-2xl font-bold">PlatformGen - Autonomous Dependency Management</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-center">
           <div>
             <label className="block mb-1">GitHub Owner:</label>
@@ -61,11 +61,26 @@ export default function Home() {
         </form>
 
         {result && (
-          <div className="mt-8">
+          <div className="mt-8 w-full max-w-2xl">
             <h2 className="text-lg font-semibold">Updated Requirements:</h2>
             <pre className="bg-gray-100 p-4 rounded mt-2 text-black whitespace-pre-wrap">
               {result.updated_requirements}
             </pre>
+
+            <h2 className="text-lg font-semibold mt-6">Summary of Changes:</h2>
+            <div className="bg-gray-100 p-4 rounded mt-2 text-black whitespace-pre-wrap">
+              {/* Llama 3.2 Summary */}
+              <h3 className="font-bold text-xl text-blue-600 mb-3">Llama 3.2 Summary:</h3>
+              <pre className="mb-4 border-l-4 border-blue-600 pl-3">
+                {result.diff_summary?.split("### Llama 3.2 Summary:")[1].trim()}
+              </pre>
+
+              {/* OpenAI Summary */}
+              <h3 className="font-bold text-xl text-green-600 mt-6 mb-3">OpenAI Summary:</h3>
+              <pre className="border-l-4 border-green-600 pl-3">
+                {result.diff_summary?.split("### Llama 3.2 Summary:")[0].replace("### OpenAI Summary:", "").trim()}
+              </pre>
+            </div>
           </div>
         )}
 
