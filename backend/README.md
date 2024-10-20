@@ -53,7 +53,10 @@ curl -X GET "http://127.0.0.1:8000/repos"
 ``` 
 curl -X POST "http://127.0.0.1:8000/parse_requirements" \
      -H "Content-Type: application/json" \
-     -d '{"requirements_text": "requests==2.25.1\nfastapi==0.70.0\nnumpy"}'
+     -d '{
+           "owner": "sakomws",
+           "repo_name": "platformgen"
+         }'
 ```
 
 3. Get latest version:
@@ -105,10 +108,10 @@ curl -X POST "http://127.0.0.1:8000/generate_updated_requirements" \
 ```
 curl -X POST "http://127.0.0.1:8000/commit_changes" \
      -H "Content-Type: application/json" \
-     -H "Authorization: Bearer <GITHUB_TOKEN>" \
+     -H "Authorization: Bearer X" \
      -d '{
-           "owner": "your_github_username",
-           "repo_name": "your_repository_name",
+           "owner": "sakomws",
+           "repo_name": "platformgen",
            "branch_name": "update-dependencies",
            "file_path": "requirements.txt",
            "updated_content": "requests==2.31.0\nfastapi==0.95.2\nnumpy==1.24.3",

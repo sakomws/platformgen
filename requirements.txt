@@ -1,5 +1,2 @@
 requests 
 packaging
-torch
-transformers
-vllm

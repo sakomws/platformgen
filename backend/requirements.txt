@@ -5,4 +5,3 @@ uvicorn
 PyGithub
 python-dotenv
 pydantic
-

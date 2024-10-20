@@ -6,12 +6,16 @@ from pydantic import BaseModel
 import requests
 from packaging import version
 import logging
+from typing import Optional
 
 # Load environment variables
 load_dotenv()
 
 # Create authentication object using an access token
 auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
+# Initialize GitHub client using token from environment variable
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+github_client = Github(GITHUB_TOKEN)
 
 # Create FastAPI app
 app = FastAPI()
@@ -19,6 +23,12 @@ app = FastAPI()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Define the Pydantic model for the request body
+class RepoInfo(BaseModel):
+    owner: str
+    repo_name: str
+    file_path: Optional[str] = "requirements.txt"
 
 # Pydantic models for request bodies
 class RequirementsText(BaseModel):
@@ -70,12 +80,13 @@ async def list_repos():
 # API Endpoints
 
 @app.post("/parse_requirements")
-def api_parse_requirements(req: RequirementsText):
+def api_parse_requirements(req: RepoInfo):
     try:
-        dependencies = parse_requirements(req.requirements_text)
+        requirements_text = fetch_requirements_from_github(req.owner, req.repo_name, req.file_path)
+        dependencies = parse_requirements(requirements_text)
         return {"dependencies": dependencies}
     except Exception as e:
-        logger.error(f"Error parsing requirements: {e}")
+        logger.error(f"Error processing request: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/get_latest_version")
@@ -145,16 +156,30 @@ def api_create_pull_request(pr_info: PullRequestInfo, authorization: str = Heade
 
 # Function Definitions
 
-def parse_requirements(requirements_text):
+def fetch_requirements_from_github(owner: str, repo_name: str, file_path: str = "requirements.txt"):
+    try:
+        repo = github_client.get_repo(f"{owner}/{repo_name}")
+        file_content = repo.get_contents(file_path).decoded_content.decode("utf-8")
+        return file_content
+    except Exception as e:
+        if "404" in str(e):
+            logger.error(f"Failed to fetch file from GitHub: {e}. File path '{file_path}' might be incorrect.")
+            raise HTTPException(status_code=404, detail="404: Could not find the specified file in the repository. Please check the file path.")
+        else:
+            logger.error(f"Error accessing GitHub repository: {e}")
+            raise HTTPException(status_code=500, detail="Error accessing the repository or fetching file.")
+
+def parse_requirements(requirements_text: str):
     dependencies = {}
     for line in requirements_text.splitlines():
         line = line.strip()
-        if line and not line.startswith("#"):
-            if "==" in line:
-                name, current_version = line.split("==")
-                dependencies[name.strip()] = current_version.strip()
-            else:
-                dependencies[line.strip()] = None
+        if not line or line.startswith('#'):
+            continue
+        if "==" in line:
+            package, version = line.split("==")
+            dependencies[package.strip()] = version.strip()
+        else:
+            dependencies[line] = None
     return dependencies
 
 def get_latest_version(package_name):
