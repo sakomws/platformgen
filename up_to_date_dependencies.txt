@@ -1,0 +1,3 @@
+Dependencies up to date:
+- llama-index-program-openai==0.2.0
+- llama-index-question-gen-openai==0.2.0

@@ -1,0 +1,49 @@
+Updates available:
+ansistrip:
+- ansistrip==20
+
+googlemaps:
+- googlemaps==27
+
+langchain-openai:
+- langchain-openai==0.2.3
+
+llama-index-agent-openai:
+- llama-index-agent-openai==0.3.4
+
+llama-index-embeddings-openai:
+- llama-index-embeddings-openai==0.2.5
+
+llama-index-graph-stores-falkordb:
+- llama-index-graph-stores-falkordb==0.2.3
+
+llama-index-graph-stores-neo4j:
+- llama-index-graph-stores-neo4j==4
+
+llama-index-llms-ollama:
+- llama-index-llms-ollama==3.1
+
+llama-index-multi-modal-llms-ollama:
+- llama-index-multi-modal-llms-ollama==0.3.3
+
+llama-index-multi-modal-llms-openai:
+- llama-index-multi-modal-llms-openai==0.2.2
+
+llama-index-readers-file:
+- llama-index-readers-file==27
+
+neo4j:
+- neo4j==4
+
+numpy:
+- numpy==2005
+
+ollama:
+- ollama==3.8
+
+python-dotenv:
+- python-dotenv==497
+
+pyvis:
+- pyvis==27
+
