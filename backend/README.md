@@ -55,7 +55,7 @@ curl -X POST "http://127.0.0.1:8000/parse_requirements" \
      -H "Content-Type: application/json" \
      -d '{
            "owner": "sakomws",
-           "repo_name": "platformgen"
+           "repo_name": "aiproxy"
          }'
 ```
 
@@ -70,38 +70,14 @@ curl -X POST "http://127.0.0.1:8000/get_latest_version" \
 ```
 curl -X POST "http://127.0.0.1:8000/check_for_updates" \
      -H "Content-Type: application/json" \
-     -d '{
-           "dependencies": {
-             "requests": "2.25.1",
-             "fastapi": "0.70.0",
-             "numpy": null
-           }
-         }'
+     -d '{"dependencies":{"fastapi":null,"uvicorn":null,"openai":null,"python-dotenv":null,"typing_extensions":null,"requests":"2.32.2","pandas":null,"numpy":null,"textgrad":null,"asyncio":null,"together":null,"fire":null,"loguru":null,"datasets":null,"typer":null,"rich":null,"pydantic":null,"groq":null,"langchain_groq":null,"llama_parse":null,"langchain":null,"nest_asyncio":null,"fastembed":null,"unstructured":null,"markdown":null,"langchain_community":null,"arize-phoenix[evals]":null,"mem0ai":null}}'
 ```
 5. Generate updated file:
 ```
 curl -X POST "http://127.0.0.1:8000/generate_updated_requirements" \
      -H "Content-Type: application/json" \
-     -d '{
-           "dependencies": {
-             "requests": "2.25.1",
-             "fastapi": "0.70.0",
-             "numpy": null
-           },
-           "updates": {
-             "requests": {
-               "current": "2.25.1",
-               "latest": "2.31.0"
-             },
-             "fastapi": {
-               "current": "0.70.0",
-               "latest": "0.95.2"
-             },
-             "numpy": {
-               "current": null,
-               "latest": "1.24.3"
-             }
-           }
+     -d '{"dependencies":{"fastapi":null,"uvicorn":null,"openai":null,"python-dotenv":null,"typing_extensions":null,"requests":"2.32.2","pandas":null,"numpy":null,"textgrad":null,"asyncio":null,"together":null,"fire":null,"loguru":null,"datasets":null,"typer":null,"rich":null,"pydantic":null,"groq":null,"langchain_groq":null,"llama_parse":null,"langchain":null,"nest_asyncio":null,"fastembed":null,"unstructured":null,"markdown":null,"langchain_community":null,"arize-phoenix[evals]":null,"mem0ai":null}},
+           {"updates":{"fastapi":{"current":null,"latest":"0.115.2"},"uvicorn":{"current":null,"latest":"0.32.0"},"openai":{"current":null,"latest":"1.52.0"},"python-dotenv":{"current":null,"latest":"1.0.1"},"typing_extensions":{"current":null,"latest":"4.12.2"},"requests":{"current":"2.32.2","latest":"2.32.3"},"pandas":{"current":null,"latest":"2.2.3"},"numpy":{"current":null,"latest":"2.1.2"},"textgrad":{"current":null,"latest":"0.1.5"},"asyncio":{"current":null,"latest":"3.4.3"},"together":{"current":null,"latest":"1.3.3"},"fire":{"current":null,"latest":"0.7.0"},"loguru":{"current":null,"latest":"0.7.2"},"datasets":{"current":null,"latest":"3.0.1"},"typer":{"current":null,"latest":"0.12.5"},"rich":{"current":null,"latest":"13.9.2"},"pydantic":{"current":null,"latest":"2.9.2"},"groq":{"current":null,"latest":"0.11.0"},"langchain_groq":{"current":null,"latest":"0.2.0"},"llama_parse":{"current":null,"latest":"0.5.10"},"langchain":{"current":null,"latest":"0.3.4"},"nest_asyncio":{"current":null,"latest":"1.6.0"},"fastembed":{"current":null,"latest":"0.3.6"},"unstructured":{"current":null,"latest":"0.16.0"},"markdown":{"current":null,"latest":"3.7"},"langchain_community":{"current":null,"latest":"0.3.3"},"mem0ai":{"current":null,"latest":"0.1.21"}}}
          }'
 ```
 6. Commit changes:
@@ -130,3 +106,11 @@ curl -X POST "http://127.0.0.1:8000/create_pull_request" \
            "branch_name": "update-dependencies"
          }'
 ```
+
+
+curl -X POST "http://127.0.0.1:8000/run_all" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "owner": "sakomws",
+           "repo_name": "aiproxy"
+         }'

@@ -7,6 +7,9 @@ import requests
 from packaging import version
 import logging
 from typing import Optional
+import random
+import string
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +22,16 @@ github_client = Github(GITHUB_TOKEN)
 
 # Create FastAPI app
 app = FastAPI()
+
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace "*" with your frontend URL, e.g., "http://localhost:3000"
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (POST, GET, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -237,3 +250,69 @@ def create_pull_request(repo, branch_name):
     )
     logger.info(f"Created pull request {pr.html_url}")
     return pr
+
+
+def generate_random_branch_name(prefix="update-dependencies-"):
+    # Generate a random alphanumeric string
+    random_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    return f"{prefix}{random_id}"
+
+@app.post("/run_all")
+def run_all_actions(repo_info: RepoInfo):
+    try:
+        # 1. List Repositories (for demo purposes, assume authenticated user)
+        user = github_client.get_user()
+        repos = [repo.name for repo in user.get_repos()]
+        
+        # 2. Fetch & Parse requirements.txt
+        requirements_text = fetch_requirements_from_github(repo_info.owner, repo_info.repo_name)
+        dependencies = parse_requirements(requirements_text)
+        
+        # 3. Check for Updates
+        updates = check_for_updates(dependencies)
+
+        # 4. Generate Updated requirements.txt
+        updated_content = generate_updated_requirements(dependencies, updates)
+
+
+        # 5. Create or Checkout a Random Branch
+        repo = github_client.get_repo(f"{repo_info.owner}/{repo_info.repo_name}")
+        branch_name = generate_random_branch_name()
+
+        # Check if branch exists, if not, create one
+        try:
+            repo.get_branch(branch_name)
+        except Exception:
+            # Get the SHA of the default branch (e.g., main)
+            source_branch = repo.get_branch("main")
+            repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source_branch.commit.sha)
+
+        # Commit Changes
+        file = repo.get_contents("requirements.txt", ref="main")
+        repo.update_file(
+            "requirements.txt",
+            "Update dependencies",
+            updated_content,
+            file.sha,
+            branch=branch_name
+        )
+        
+        # 6. Create Pull Request
+        pr = repo.create_pull(
+            title="Update dependencies",
+            body="Automated update of dependencies",
+            head=branch_name,
+            base="main"
+        )
+
+        return {
+            "repositories": repos,
+            "parsed_dependencies": dependencies,
+            "updates": updates,
+            "updated_requirements": updated_content,
+            "pr_link": pr.html_url
+        }
+
+    except Exception as e:
+        logger.error(f"Error processing request: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
