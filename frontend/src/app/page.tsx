@@ -30,6 +30,12 @@ export default function Home() {
     }
   };
 
+  const extractSummary = (diffSummary, sectionName) => {
+    const regex = new RegExp(`### ${sectionName} Summary:([\\s\\S]*?)(?=(###|$))`, 'i');
+    const match = diffSummary.match(regex);
+    return match ? match[1].trim() : 'No summary available';
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-gray-800">
       <main className="flex flex-col lg:flex-row gap-10 w-full max-w-7xl">
@@ -96,15 +102,23 @@ export default function Home() {
             <div className="bg-gray-50 p-4 rounded-lg text-gray-800 border border-gray-200 overflow-y-auto max-h-80">
               <h3 className="font-bold text-xl text-blue-600 mb-3">Premai Summary:</h3>
               <pre className="bg-gray-50 p-3 rounded-lg border-l-4 border-blue-600 pl-3 shadow-sm overflow-x-auto whitespace-pre-wrap break-words">
-                {result.diff_summary?.split("### Premai Summary:")[1].trim()}
+                {extractSummary(result.diff_summary, "Premai")}
               </pre>
             </div>
 
-            {/* OpenAI Summary */}
+            {/* SambaNova Summary */}
             <div className="bg-gray-50 p-4 rounded-lg text-gray-800 border border-gray-200 overflow-y-auto max-h-80">
               <h3 className="font-bold text-xl text-green-600 mt-6 mb-3">SambaNova Summary:</h3>
               <pre className="bg-gray-50 p-3 rounded-lg border-l-4 border-green-600 pl-3 shadow-sm overflow-x-auto whitespace-pre-wrap break-words">
-                {result.diff_summary?.split("### SambaNova Summary:")[0].replace("### SambaNova Summary:", "").trim()}
+                {extractSummary(result.diff_summary, "SambaNova")}
+              </pre>
+            </div>
+
+            {/* Exa Summary */}
+            <div className="bg-gray-50 p-4 rounded-lg text-gray-800 border border-gray-200 overflow-y-auto max-h-80">
+              <h3 className="font-bold text-xl text-green-600 mt-6 mb-3">Exa Summary:</h3>
+              <pre className="bg-gray-50 p-3 rounded-lg border-l-4 border-green-600 pl-3 shadow-sm overflow-x-auto whitespace-pre-wrap break-words">
+                {extractSummary(result.diff_summary, "Exa")}
               </pre>
             </div>
           </div>
