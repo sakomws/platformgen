@@ -12,6 +12,8 @@ import string
 from fastapi.middleware.cors import CORSMiddleware
 import openai
 from groq import Groq
+from premai import Prem
+from exa_py import Exa
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +25,15 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 github_client = Github(GITHUB_TOKEN)
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
+PREMAI_API_KEY = os.getenv("PREMAI_API_KEY")
+SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
+def get_exa_client():
+    """Initialize the Exa client with an API key."""
+    api_key = os.getenv("EXA_API_KEY")  # Use env or fallback
+    return Exa(api_key=api_key)
+
+exa = get_exa_client()
 
 # Create FastAPI app
 app = FastAPI()
@@ -371,7 +381,55 @@ def get_diff_summary(diff_request: DiffRequest):
             logger.error(f"Failed to generate summary with OpenAI: {e}")
             openai_summary = "Failed to generate summary with OpenAI."
 
-        # 2. Call Groq Llama 3.2 Model
+        # 2. Call Premai Client
+        premai_summary = ""
+        try:
+            client = Prem(api_key=PREMAI_API_KEY)
+            model = "gpt-4-turbo"
+            session_id = "my-session"
+            temperature = 0.7
+            messages = [
+                {"role": "user", "content": f"Do: Step 1. Create a summary of differences between the original and updated requirements. Step 2. Evaluate the summary. Step 3. Output with bullet points and new lines based on the following content:\n\n{prompt}"}
+            ]
+
+            response = client.chat.completions.create(
+                project_id=6022,
+                messages=messages,
+                model=model,
+                system_prompt="You are an assistant that summarizes software package changes.",
+                session_id=session_id,
+                temperature=temperature
+            )
+            premai_summary = response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Failed to generate summary with Premai: {e}")
+            premai_summary = "Failed to generate summary with Premai."
+
+        # 3. Call SambaNova API
+        sambanova_summary = ""
+        try:
+            sambanova_url = "https://api.sambanova.ai/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {SAMBANOVA_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            data = {
+                "model": "Meta-Llama-3.2-3B-Instruct",
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.1,
+                "top_p": 0.1
+            }
+            sambanova_response = requests.post(sambanova_url, headers=headers, json=data)
+            sambanova_response.raise_for_status()
+            sambanova_summary = sambanova_response.json().get("choices")[0].get("message", {}).get("content", "").strip()
+        except Exception as e:
+            logger.error(f"Failed to generate summary with SambaNova: {e}")
+            sambanova_summary = "Failed to generate summary with SambaNova."
+
+        # 4. Call Groq Llama 3.2 Model
         groq_summary = ""
         try:
             client = Groq()  # Assuming Groq client is already set up
@@ -396,14 +454,32 @@ def get_diff_summary(diff_request: DiffRequest):
             logger.error(f"Failed to generate summary with Groq: {e}")
             groq_summary = "Failed to generate summary with Groq."
 
-        # Combine OpenAI and Groq summaries
-        combined_summary = f"### OpenAI Summary:\n{openai_summary}\n\n### Llama 3.2 Summary:\n{groq_summary}"
-        
+        try:    
+            # Perform the search with filters
+            exa_summary = exa.search_and_contents(
+                query=prompt,
+                type="neural",
+                use_autoprompt=True,
+                num_results=20,
+                text=True,
+                exclude_domains=["en.wikipedia.org"],
+                start_published_date="2023-01-01",
+                category="tweet"
+            )
+        except Exception as e:
+            logger.error(f"Failed to generate diff summary for Exa: {e}")
+            return {"summary": "Failed to generate summary due to an error."}
+        # Combine all summaries
+        combined_summary = (
+            f"### OpenAI Summary:\n{openai_summary}\n\n"
+            f"### Premai Summary:\n{premai_summary}\n\n"
+            f"### SambaNova Summary:\n{sambanova_summary}\n\n"
+            f"### Groq Summary:\n{groq_summary}"
+            f"### Exa Summary:\n{exa_summary}"
+        )
+
         return {"summary": combined_summary}
 
     except Exception as e:
         logger.error(f"Failed to generate diff summary: {e}")
         return {"summary": "Failed to generate summary due to an error."}
-
-
-

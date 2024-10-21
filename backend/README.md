@@ -114,3 +114,9 @@ curl -X POST "http://127.0.0.1:8000/run_all" \
            "owner": "sakomws",
            "repo_name": "aiproxy"
          }'
+
+
+
+
+
+source venv/bin/activate

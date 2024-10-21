@@ -92,19 +92,19 @@ export default function Home() {
           <div className="flex flex-col gap-6 w-full lg:w-2/3 bg-gray-100 p-6 rounded-lg border border-gray-200 shadow-md">
             <h2 className="text-lg font-semibold text-gray-900">Summary of Changes:</h2>
 
-            {/* Llama 3.2 Summary */}
+            {/* Premai Summary */}
             <div className="bg-gray-50 p-4 rounded-lg text-gray-800 border border-gray-200 overflow-y-auto max-h-80">
-              <h3 className="font-bold text-xl text-blue-600 mb-3">Llama 3.2 Summary:</h3>
+              <h3 className="font-bold text-xl text-blue-600 mb-3">Premai Summary:</h3>
               <pre className="bg-gray-50 p-3 rounded-lg border-l-4 border-blue-600 pl-3 shadow-sm overflow-x-auto whitespace-pre-wrap break-words">
-                {result.diff_summary?.split("### Llama 3.2 Summary:")[1].trim()}
+                {result.diff_summary?.split("### Premai Summary:")[1].trim()}
               </pre>
             </div>
 
             {/* OpenAI Summary */}
             <div className="bg-gray-50 p-4 rounded-lg text-gray-800 border border-gray-200 overflow-y-auto max-h-80">
-              <h3 className="font-bold text-xl text-green-600 mt-6 mb-3">OpenAI Summary:</h3>
+              <h3 className="font-bold text-xl text-green-600 mt-6 mb-3">SambaNova Summary:</h3>
               <pre className="bg-gray-50 p-3 rounded-lg border-l-4 border-green-600 pl-3 shadow-sm overflow-x-auto whitespace-pre-wrap break-words">
-                {result.diff_summary?.split("### Llama 3.2 Summary:")[0].replace("### OpenAI Summary:", "").trim()}
+                {result.diff_summary?.split("### SambaNova Summary:")[0].replace("### SambaNova Summary:", "").trim()}
               </pre>
             </div>
           </div>
