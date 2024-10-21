@@ -1,8 +1,8 @@
 
 **PlatformGen - Autonomous Dependency Manager**
 
-<img width="1410" alt="memary overview" src="./images/demo1.jpg">
-<img width="1410" alt="memary overview" src="./images/demo2.jpg">
+<img width="1410" alt="PlatformGen demo" src="./images/demo1.jpg">
+<img width="1410" alt="PlatformGen demo" src="./images/demo2.jpg">
 
 - Draft PR created: https://github.com/sakomws/aiproxy/pull/54
 
